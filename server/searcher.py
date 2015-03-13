@@ -13,11 +13,17 @@ from util.rake import Rake
 print("load vm")
 index_dir = '../../data/index/'
 
-lucene.initVM()
+#搭配地址
+location_dir = '../../data/location/'
 
+lucene.initVM()
 
 directory = lucene.SimpleFSDirectory(lucene.File(index_dir))
 analyzer = lucene.StandardAnalyzer(lucene.Version.LUCENE_CURRENT)
+
+directory1 = lucene.SimpleFSDirectory(lucene.File(location_dir))
+analyzer1 = lucene.StandardAnalyzer(lucene.Version.LUCENE_CURRENT)
+
 
 rake = Rake("../../data/SmartStoplist.txt")
 
@@ -46,11 +52,39 @@ def search(word):
     searcher.close()
     return fuck
 
+def search_location(word):
+    print("searching ")
+    
+    vm_env = lucene.getVMEnv()
+    vm_env.attachCurrentThread()
+    
+    searcher = lucene.IndexSearcher(directory1,True)
+    query = lucene.QueryParser(lucene.Version.LUCENE_CURRENT,'eng',analyzer1).parse(word)
+    #print "查询"
+    results = searcher.search(query,None,20)
+    score_docs = results.scoreDocs
+
+    fuck = []
+    
+    for score_doc in score_docs:
+        doc = searcher.doc(score_doc.doc)
+
+        p = doc['eng']
+
+        fuck.append(p)
+        
+    searcher.close()
+    return fuck
+
+def get_location_text(result):
+    return ' | '.join(result)
+
+    
 def get_text(result):
     rs = u""
     for number,line in enumerate(result):
         keywords = rake.run(line[0])
-        keywords = [i for i,j in keywords]
+        keywords = [i for i,j in keywords if len(i) > 3]
         keywords = ' | '.join(keywords)
         rs += u'''<p> 例句%s </p><p>英语 %s</p> <p>汉语 %s </p> \n 
         <div class=\"well\">

@@ -9,7 +9,7 @@ from wtforms import StringField
 from wtforms.validators import DataRequired
 from flask import abort, redirect, url_for
 
-from searcher import search,get_text
+from searcher import search,get_text,search_location,get_location_text
 
 from flask_bootstrap import Bootstrap
 from flask_appconfig import AppConfig
@@ -51,8 +51,11 @@ def fsearch(words):
     result = search(words)
     for line in result:
         print line[0],line[1]
-            
-    return render_template('exform.html',words=words,result = get_text(result),form=form2)
+
+    location = search_location(words)
+    print(location)    
+        
+    return render_template('exform.html',words=words,result = get_text(result),form=form2,collocation = get_location_text(location))
 
     
 @app.route('/submit', methods=('GET', 'POST'))
